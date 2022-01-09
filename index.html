@@ -40,7 +40,7 @@
 				
 
 
-				var pointLight = new THREE.PointLight( 0xffffff, 0.5 );
+				var pointLight = new THREE.PointLight( 0xffffff, 0.2 );
 				scene.add( pointLight );
 				
 
@@ -59,7 +59,7 @@
 						const roughnessMipmapper = new RoughnessMipmapper( renderer );
 
 						const loader = new GLTFLoader().setPath( 'models/gltf/' );
-						loader.load( 'smudged_logo.glb', function ( gltf ) {
+						loader.load( 'smudged_logo_new.gltf', function ( gltf ) {
 
 							gltf.scene.traverse( function ( child ) {
 
@@ -90,7 +90,7 @@
 				renderer.setPixelRatio( window.devicePixelRatio );
 				renderer.setSize( container.clientWidth, container.clientHeight );
 				renderer.toneMapping = THREE.ACESFilmicToneMapping;
-				renderer.toneMappingExposure = 1.1;
+				renderer.toneMappingExposure = 1;
 				renderer.outputEncoding = THREE.sRGBEncoding;
 				container.appendChild( renderer.domElement );
 

@@ -14,16 +14,18 @@
 
 			import * as THREE from '../build/three.module.js';
 
-			import { OrbitControls } from './jsm/controls/OrbitControls.js';
 			import { GLTFLoader } from './jsm/loaders/GLTFLoader.js';
 			import { RGBELoader } from './jsm/loaders/RGBELoader.js';
 			import { RoughnessMipmapper } from './jsm/utils/RoughnessMipmapper.js';
 
 			let camera, scene, renderer;
 			let container;
+			let frameId;
+			let counterClock = 0;
+        	let mouseX = 0;
+			let logo;
 
 			init();
-			render();
 
 			function init() {
 
@@ -31,21 +33,25 @@
 				document.body.appendChild( container );
 
 	
-				camera = new THREE.PerspectiveCamera( 45, container.clientWidth / container.clientHeight, 0.45, 40 );
-				camera.position.set( 0, 0, 2.4);
-
+				camera = new THREE.PerspectiveCamera( 55, container.clientWidth / container.clientHeight, 0.45, 40 );
+				camera.position.set( 0, 0, 2);
+				camera.rotation.y = 4.32;
 				scene = new THREE.Scene();
+				
+
+
+				var pointLight = new THREE.PointLight( 0xffffff, 0.5 );
+				scene.add( pointLight );
+				
 
 				new RGBELoader()
 					.setPath( 'textures/equirectangular/' )
-					.load( 'royal_esplanade_1k.hdr', function ( texture ) {
+					.load( 'canada_montreal_thea.hdr', function ( texture ) {
 
 						texture.mapping = THREE.EquirectangularReflectionMapping;
-
 						// scene.background = texture;
 						scene.environment = texture;
 
-						render();
 
 						// model
 
@@ -53,7 +59,7 @@
 						const roughnessMipmapper = new RoughnessMipmapper( renderer );
 
 						const loader = new GLTFLoader().setPath( 'models/gltf/' );
-						loader.load( 'gut.gltf', function ( gltf ) {
+						loader.load( 'smudged_logo.glb', function ( gltf ) {
 
 							gltf.scene.traverse( function ( child ) {
 
@@ -64,55 +70,73 @@
 								}
 
 							} );
-
-							scene.add( gltf.scene );
+							logo = gltf.scene;
+							scene.add(logo);
+							
+							logo.position.z = 2.89;
+							logo.position.x = 2.2;
+							
+							logo.rotation.y = 4.25;
 
 							roughnessMipmapper.dispose();
 
-							render();
+							start();
 
 						} );
 
 					} );
 
-				renderer = new THREE.WebGLRenderer( { antialias: true } );
+				renderer = new THREE.WebGLRenderer( { antialias: true,  alpha: true } );
 				renderer.setPixelRatio( window.devicePixelRatio );
 				renderer.setSize( container.clientWidth, container.clientHeight );
 				renderer.toneMapping = THREE.ACESFilmicToneMapping;
-				renderer.toneMappingExposure = 1;
+				renderer.toneMappingExposure = 1.1;
 				renderer.outputEncoding = THREE.sRGBEncoding;
 				container.appendChild( renderer.domElement );
 
-				const controls = new OrbitControls( camera, renderer.domElement );
-				controls.addEventListener( 'change', render ); // use if there is no animation loop
-				controls.minDistance = 2;
-				controls.maxDistance = 3;
-				controls.target.set( 0, 0, - 0.2 );
-				controls.update();
-
 				window.addEventListener( 'resize', onWindowResize );
+				document.addEventListener('mousemove',onDocumentMouseMove, false);
+				document.addEventListener('touchmove', onDocumentTouchMove, false);
+			}
+
+			function start() {
+				if (!frameId) {
+					frameId = requestAnimationFrame(animate)
+				}
+			}
+
+			function animate() {
+				if (counterClock < 479) {
+					counterClock++;
+				} else {
+					counterClock = 0;
+				}
+				logo.rotation.y = -((mouseX / window.innerWidth) * (Math.PI * 2) + ((counterClock / 360) * (Math.PI * 1.5)));
+
+				render()
+				frameId = window.requestAnimationFrame(animate)
+			}
+
+			function render() {
+				renderer.render( scene, camera );
 
 			}
 
-			function onWindowResize() {
+			function onDocumentMouseMove (event) {
+				mouseX = (event.clientX - (window.innerWidth / 2));
+			}
 
-				// camera.aspect = window.innerWidth / window.innerHeight;
+			function onDocumentTouchMove(event) {
+				mouseX = (event.touches[0].clientX - (window.innerWidth / 2));
+			}
+
+			function onWindowResize() {
 				const containerWidth = container.offsetWidth;
-        		const containerHeight = container.offsetHeight;
+				const containerHeight = container.offsetHeight;
 				camera.aspect = containerWidth / containerHeight;
 				camera.updateProjectionMatrix();
 
 				renderer.setSize( containerWidth, containerHeight );
-
-				render();
-
-			}
-
-			//
-
-			function render() {
-
-				renderer.render( scene, camera );
 
 			}
 
